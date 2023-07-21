@@ -5,53 +5,82 @@ import random
 pygame.init()
 
 class Player:
-    def __init__(self, x, y, width, height, speed):
-        self.x = x
-        self.y = y
+    def __init__(self, pos_x, pos_y, width, height, speed):
+        #position
+        self.pos_x = pos_x
+        self.pos_y = pos_y
+        #dimension
         self.width = width
         self.height = height
+        #speed
         self.speed = speed
+        # list with images for the walk animation
+        self.animation_frames = [pygame.image.load(f"./assets/images/player/hero/hero_walk_{i}.png") for i in range(1, 5)]
+        # current image
+        self.current_frame = 0
+        # test criterion whether the figure is moving
+        self.is_walking = False
         
 
     def move(self, keys, display_width, display_height):
-        if keys[pygame.K_UP] and self.y > 0:
-            self.y -= self.speed
-        if keys[pygame.K_RIGHT] and self.x + self.width < display_width:
-            self.x += self.speed
-        if keys[pygame.K_DOWN] and self.y + self.height < display_height:
-            self.y += self.speed
-        if keys[pygame.K_LEFT] and self.x > 0:
-            self.x -= self.speed
+        self.is_walking = False
+        if keys[pygame.K_UP] and self.pos_y > 0:
+            self.pos_y -= self.speed
+        if keys[pygame.K_RIGHT] and self.pos_x + self.width < display_width:
+            self.pos_x += self.speed
+            #set to true and thus enable the index to be censored
+            self.is_walking = True
+        if keys[pygame.K_DOWN] and self.pos_y + self.height < display_height:
+            self.pos_y += self.speed
+        if keys[pygame.K_LEFT] and self.pos_x > 0:
+            self.pos_x -= self.speed
+            #set to true and thus enable the index to be censored
+            self.is_walking = True
+
+        # Index, which is counted on the basis of movement.
+        # Not longer than the image list and is reset with modulo.
+        # Index is then used for the selection of the image to be run
+        if self.is_walking:
+            self.current_frame = (self.current_frame + 1) % len(self.animation_frames)
 
     def draw(self, screen):
-        # loade asset
-        player_char = pygame.image.load("./assets/images/player/hero/hero_walk_1.png")
+        # Select and display the current picture from the list, only when the right and left buttons are pressed.d
+        if self.is_walking:
+            current_image = self.animation_frames[self.current_frame]
+            
+        else:
+            # Show the first image when not running
+            current_image = self.animation_frames[0]  
         # scaled the asset
-        scaled_player_image = pygame.transform.scale(player_char, (self.width, self.height))
-        # show enemy on screen
-        screen.blit(scaled_player_image, (self.x, self.y))        
+        scaled_player_image = pygame.transform.scale(current_image, (self.width, self.height))
+        # zeichne es im window
+        screen.blit(scaled_player_image, (self.pos_x, self.pos_y))
+                        
+
 
 class Enemy:
-    def __init__(self, x, y, width, height, speed):
-        self.x = x
-        self.y = y
+    def __init__(self, pos_x, pos_y, width, height, speed):
+        self.pos_x = pos_x
+        self.pos_y = pos_y
         self.width = width
         self.height = height
         self.speed = speed
 
+    # control the movement of the opponent
     def move_towards_player(self, player):
-        target_x = player.x
-        target_y = player.y
+        target_x = player.pos_x
+        target_y = player.pos_y
 
-        if self.x < target_x:
-            self.x += min(self.speed, target_x - self.x)
-        elif self.x > target_x:
-            self.x -= min(self.speed, self.x - target_x)
+        # Check whether speed is greater than the distance and then use the smaller value with min. This prevents inconsistency/flickering.
+        if self.pos_x < target_x:
+            self.pos_x += min(self.speed, target_x - self.pos_x)
+        elif self.pos_x > target_x:
+            self.pos_x -= min(self.speed, self.pos_x - target_x)
 
-        if self.y < target_y:
-            self.y += min(self.speed, target_y - self.y)
-        elif self.y > target_y:
-            self.y -= min(self.speed, self.y - target_y)
+        if self.pos_y < target_y:
+            self.pos_y += min(self.speed, target_y - self.pos_y)
+        elif self.pos_y > target_y:
+            self.pos_y -= min(self.speed, self.pos_y - target_y)
 
     def draw(self, screen):
         # loade asset
@@ -59,19 +88,19 @@ class Enemy:
         # scaled the asset
         scaled_enemy_image = pygame.transform.scale(enemy_char, (self.width, self.height))
         # show enemy on screen
-        screen.blit(scaled_enemy_image, (self.x, self.y))
+        screen.blit(scaled_enemy_image, (self.pos_x, self.pos_y))
 
 
 
 
 class Game:
     def __init__(self):
-        self.display_width = 800
+        self.display_width = 1200
         self.display_height = 800
         self.screen = pygame.display.set_mode([self.display_width, self.display_height])
         self.clock = pygame.time.Clock()
         self.background = pygame.image.load("./assets/images/world/BG.png")
-        self.player = Player(x=100, y=100, width=30, height=30, speed=7)
+        self.player = Player(pos_x=100, pos_y=100, width=30, height=20, speed=7)
         self.enemy = Enemy(random.randint(0, self.display_width-40), random.randint(0, self.display_height-40), width=50, height=50, speed=5)
         self.game_over_font = pygame.font.SysFont(None, 80)
         pygame.display.set_caption("MyGame")
@@ -112,24 +141,24 @@ class Game:
 
     # check the collision
     def check_collision(self):
-        if self.player.x < self.enemy.x + self.enemy.width and self.player.x + self.player.width > self.enemy.x:
-            if self.player.y < self.enemy.y + self.enemy.height and self.player.y + self.player.height > self.enemy.y:
+        if self.player.pos_x < self.enemy.pos_x + self.enemy.width and self.player.pos_x + self.player.width > self.enemy.pos_x:
+            if self.player.pos_y < self.enemy.pos_y + self.enemy.height and self.player.pos_y + self.player.height > self.enemy.pos_y:
                 return True
         return False
     
     # reset the game if the player was catched by the enemy
     def reset_game(self):
-        self.player.x = 100
-        self.player.y = 100
-        self.enemy.x = random.randint(0, self.display_width - 40)
-        self.enemy.y = random.randint(0, self.display_height - 40)
+        self.player.pos_x = 100
+        self.player.pos_y = 100
+        self.enemy.pos_x = random.randint(0, self.display_width - 40)
+        self.enemy.pos_y = random.randint(0, self.display_height - 40)
 
     def create_world(self):
-        # platziere den screen (Start bei x = 0 und y = 0)
+        # placed den screen (Start bei x = 0 und y = 0)
         self.screen.blit(self.background, (0, 0))
-        # platziere den spieler im screen
+        # placed the player into the window
         self.player.draw(self.screen)
-        # platziere den gegner im spiel
+        # placed the enemy into the window
         self.enemy.draw(self.screen)
         pygame.display.update()
 
