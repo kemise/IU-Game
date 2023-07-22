@@ -37,6 +37,7 @@ class Player:
             #set to true and thus enable the index to be censored
             self.is_walking = True
 
+
         # Index, which is counted on the basis of movement.
         # Not longer than the image list and is reset with modulo.
         # Index is then used for the selection of the image to be run
@@ -47,13 +48,14 @@ class Player:
         # Select and display the current picture from the list, only when the right and left buttons are pressed.d
         if self.is_walking:
             current_image = self.animation_frames[self.current_frame]
+
             
         else:
             # Show the first image when not running
             current_image = self.animation_frames[0]  
         # scaled the asset
         scaled_player_image = pygame.transform.scale(current_image, (self.width, self.height))
-        # zeichne es im window
+        # draw it in the window
         screen.blit(scaled_player_image, (self.pos_x, self.pos_y))
                         
 
@@ -65,6 +67,12 @@ class Enemy:
         self.width = width
         self.height = height
         self.speed = speed
+        # list with images for the walk animation
+        self.animation_frames = [pygame.image.load(f"./assets/images/player/enemy/enemy_walk_{i}.png") for i in range(1, 6)]
+        # current image
+        self.current_frame = 0
+        # test criterion whether the figure is moving
+        self.is_walking = False
 
     # control the movement of the opponent
     def move_towards_player(self, player):
@@ -74,37 +82,132 @@ class Enemy:
         # Check whether speed is greater than the distance and then use the smaller value with min. This prevents inconsistency/flickering.
         if self.pos_x < target_x:
             self.pos_x += min(self.speed, target_x - self.pos_x)
+            #set to true and thus enable the index to be censored
+            self.is_walking = True
         elif self.pos_x > target_x:
             self.pos_x -= min(self.speed, self.pos_x - target_x)
-
+            #set to true and thus enable the index to be censored
+            self.is_walking = True
         if self.pos_y < target_y:
             self.pos_y += min(self.speed, target_y - self.pos_y)
+            #set to true and thus enable the index to be censored
+            self.is_walking = True
         elif self.pos_y > target_y:
             self.pos_y -= min(self.speed, self.pos_y - target_y)
+            #set to true and thus enable the index to be censored
+            self.is_walking = True
 
+        if self.is_walking:
+            
+                    self.current_frame = (self.current_frame + 1) % len(self.animation_frames)
+
+
+    # draw the enemy
     def draw(self, screen):
-        # loade asset
-        enemy_char = pygame.image.load("./assets/images/player/enemy/enemy_walk_1.png")
+        # Select and display the current picture from the list, only when the right and left buttons are pressed.d
+        if self.is_walking:
+            current_image = self.animation_frames[self.current_frame]  
+        else:
+            # Show the first image when not running
+            current_image = self.animation_frames[0]  
         # scaled the asset
-        scaled_enemy_image = pygame.transform.scale(enemy_char, (self.width, self.height))
-        # show enemy on screen
-        screen.blit(scaled_enemy_image, (self.pos_x, self.pos_y))
+        scaled_enemy_image = pygame.transform.scale(current_image, (self.width, self.height))
+        # draw it in the window
+        screen.blit(scaled_enemy_image, (self.pos_x, self.pos_y))    
+
+
+        
 
 
 
 
 class Game:
     def __init__(self):
-        self.display_width = 1200
+        self.display_width = 800
         self.display_height = 800
+        # game variables
+        # grid size
+        self.tile_size = 40
+        # display sizes
         self.screen = pygame.display.set_mode([self.display_width, self.display_height])
         self.clock = pygame.time.Clock()
+        # background image
         self.background = pygame.image.load("./assets/images/world/BG.png")
-        self.player = Player(pos_x=100, pos_y=100, width=30, height=20, speed=7)
-        self.enemy = Enemy(random.randint(0, self.display_width-40), random.randint(0, self.display_height-40), width=50, height=50, speed=5)
+        # player settings
+        self.player = Player(pos_x=self.tile_size*3, pos_y=self.tile_size*18.5, width=30, height=20, speed=5)
+        # enemy setting
+        self.enemy = Enemy(random.randint(0, self.display_width-40), random.randint(0, self.display_height-40), width=40, height=40, speed=1)
+        # for game over event
         self.game_over_font = pygame.font.SysFont(None, 80)
+        # screen name
         pygame.display.set_caption("MyGame")
         self.go = True
+        # asset images
+        grass_img = pygame.image.load("./assets/images/StoneBlock.png")
+        dirt_img = pygame.image.load("./assets/images/Stone.png")    
+        # placeholder for assets (map)
+        self.tile_list = []
+        row_count = 0
+        # map structure
+        self.world_data = [
+            [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], 
+            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
+            [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 2], 
+            [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 2, 2], 
+            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 2, 0, 5, 0, 0, 0, 2], 
+            [2, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 2], 
+            [2, 2, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
+            [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
+            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 2], 
+            [2, 0, 2, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
+            [2, 0, 0, 2, 0, 0, 4, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 2], 
+            [2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 2], 
+            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
+            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 2, 0, 2], 
+            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
+            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2], 
+            [2, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], 
+            [2, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], 
+            [2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], 
+            [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+            ]
+        # mapping the the images to the playground
+        for row in self.world_data:
+            col_count = 0
+            for tile in row:
+                if tile == 1:
+                    # format the image based on the tile_size
+                    img = pygame.transform.scale(dirt_img, (self.tile_size, self.tile_size))
+                    # create rect-object
+                    img_rect = img.get_rect()
+                    # x-pos
+                    img_rect.x = col_count * self.tile_size
+                    # y-pos
+                    img_rect.y = row_count * self.tile_size
+                    # Assignment of img and pos
+                    tile = (img, img_rect)
+                    self.tile_list.append(tile)
+                if tile == 2:
+                    img = pygame.transform.scale(grass_img, (self.tile_size, self.tile_size))
+                    img_rect = img.get_rect()
+                    img_rect.x = col_count * self.tile_size
+                    img_rect.y = row_count * self.tile_size
+                    tile = (img, img_rect)
+                    self.tile_list.append(tile)
+                col_count += 1
+            row_count += 1
+    
+    # GRID FOR TESTING
+    def draw_grid(self):
+        for line in range(0, 20):
+            pygame.draw.line(self.screen, (255, 255, 255), (0, line * self.tile_size), (self.display_width, line * self.tile_size))
+            pygame.draw.line(self.screen, (255, 255, 255), (line * self.tile_size, 0), (line * self.tile_size, self.display_height))
+
+    # display tile on screen
+    def draw(self):
+        # display each tile from the list on the screen
+        for tile in self.tile_list:
+            self.screen.blit(tile[0], tile[1])
 
 
     def show_game_over(self):
@@ -139,11 +242,54 @@ class Game:
 
                 
 
-    # check the collision
+    # check the collision between player and enemy
     def check_collision(self):
         if self.player.pos_x < self.enemy.pos_x + self.enemy.width and self.player.pos_x + self.player.width > self.enemy.pos_x:
             if self.player.pos_y < self.enemy.pos_y + self.enemy.height and self.player.pos_y + self.player.height > self.enemy.pos_y:
                 return True
+        
+        # player collision
+        player_rect = pygame.Rect(self.player.pos_x, self.player.pos_y, self.player.width, self.player.height)
+        # check if the rectangle of the player overlaps with the rectangle of the block
+        for tile in self.tile_list:
+            tile_rect = tile[1]
+            if player_rect.colliderect(tile_rect):
+                # Check if the player is standing on a block from above
+                if player_rect.bottom > tile_rect.top and self.player.pos_y < tile_rect.top:
+                    self.player.pos_y = tile_rect.top - self.player.height
+                # Check if the player bumps into a block from below
+                # checked that the bottom edge of the player is below the bottom edge of the block
+                elif player_rect.top < tile_rect.bottom and self.player.pos_y + self.player.height > tile_rect.bottom:
+                    self.player.pos_y = tile_rect.bottom
+                # Checking if the player bumps into a block from the right
+                elif player_rect.right > tile_rect.left and self.player.pos_x < tile_rect.left:
+                    self.player.pos_x = tile_rect.left - self.player.width
+                # Check if the player bumps into a block from the left
+                elif player_rect.left < tile_rect.right and self.player.pos_x + self.player.width > tile_rect.right:
+                    self.player.pos_x = tile_rect.right
+        
+        # enemy collision
+        enemy_rect = pygame.Rect(self.enemy.pos_x, self.enemy.pos_y, self.enemy.width, self.enemy.height)
+        # check if the rectangle of the enemy overlaps with the rectangle of the block
+        for tile in self.tile_list:
+            tile_rect = tile[1]
+            if enemy_rect.colliderect(tile_rect):
+                # Check if the enemy is standing on a block from above
+                if enemy_rect.bottom > tile_rect.top and self.enemy.pos_y < tile_rect.top:
+                    self.enemy.pos_y = tile_rect.top - self.enemy.height
+                # Check if the enemy bumps into a block from below
+                # checked that the bottom edge of the enemy is below the bottom edge of the block
+                elif enemy_rect.top < tile_rect.bottom and self.enemy.pos_y + self.enemy.height > tile_rect.bottom:
+                    self.enemy.pos_y = tile_rect.bottom
+                # Checking if the enemy bumps into a block from the right
+                elif enemy_rect.right > tile_rect.left and self.enemy.pos_x < tile_rect.left:
+                    self.enemy.pos_x = tile_rect.left - self.enemy.width
+                # Check if the enemy bumps into a block from the left
+                elif enemy_rect.left < tile_rect.right and self.enemy.pos_x + self.enemy.width > tile_rect.right:
+                    self.enemy.pos_x = tile_rect.right
+
+
+        
         return False
     
     # reset the game if the player was catched by the enemy
@@ -154,13 +300,18 @@ class Game:
         self.enemy.pos_y = random.randint(0, self.display_height - 40)
 
     def create_world(self):
-        # placed den screen (Start bei x = 0 und y = 0)
+        # placed den screen (Start at x = 0 and y =0)
         self.screen.blit(self.background, (0, 0))
         # placed the player into the window
         self.player.draw(self.screen)
         # placed the enemy into the window
         self.enemy.draw(self.screen)
+        self.draw_grid()
+        self.draw()
         pygame.display.update()
+
+    
+    
 
 
         
@@ -170,9 +321,10 @@ class Game:
             while self.go:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
-                        go = False
+                        self.go = False
 
                 keys = pygame.key.get_pressed()
+                
                 self.player.move(keys, self.display_width, self.display_height)
                 self.enemy.move_towards_player(self.player)
 
@@ -182,6 +334,8 @@ class Game:
 
                 self.create_world()
                 self.clock.tick(60)
+
+
 
 if __name__ == "__main__":
     game = Game()
