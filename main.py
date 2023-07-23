@@ -366,12 +366,16 @@ class Game:
 
 
     def run(self):
-        display_width, display_height = 800, 800
+        #start from pygame
         pygame.init()
-        self.screen = pygame.display.set_mode((display_width, display_height))
-        pygame.display.set_caption("Spielname")
 
-        start_button = Button(display_width // 2 - 100, display_height // 2 - 50, 200, 100, self.create_world)
+        # create a screen with the dimensions
+        self.screen = pygame.display.set_mode((self.display_width, self.display_height))
+        # set the game name
+        pygame.display.set_caption("Spielname")
+        # objects for buttons
+        start_button = Button(x=(self.display_width // 2 - 100),y=(self.display_height // 2 - 50), width=200, height=100, callback=self.create_world)
+        exit_button = Button(x=(self.display_width // 2 - 100),y=(self.display_height // 2 - -80), width=200, height=100, callback=self.create_world)
 
         new_enemy = pygame.USEREVENT
         pygame.time.set_timer(new_enemy, 10000)
@@ -387,7 +391,7 @@ class Game:
                     start_button.handle_event(event)
 
                 if event.type == new_enemy:
-                    test = Enemy(random.randint(0, display_width - 40), random.randint(0, display_height - 40),
+                    test = Enemy(random.randint(0, self.display_width - 40), random.randint(0, self.display_height - 40),
                                  width=40, height=40, speed=2)
                     self.enemy_list.append(test)
 
@@ -395,7 +399,7 @@ class Game:
 
             
             if self.game_started:
-                self.player.move(keys, display_width, display_height)
+                self.player.move(keys, self.display_width, self.display_height)
 
             # handle the collision between player, enemies and objects
             if self.check_collision():
@@ -407,7 +411,8 @@ class Game:
             
             # if button is not triggered draw the start button at the screen
             if not self.game_started:
-                start_button.draw(self.screen)
+                start_button.draw_start_button(self.screen)
+                exit_button.draw_exit_button(self.screen)
                 
             # if button triggered create the world
             if self.game_started:
@@ -423,16 +428,21 @@ class Button:
     def __init__(self, x, y, width, height, callback):
 
         self.rect = pygame.Rect(x, y, width, height)
-        # image for the button
-        self.image = pygame.image.load("./assets/images/Buttons/tedr.png")
+        # images for the buttons
+        self.start_image = pygame.image.load("./assets/images/Buttons/start_button.png")
+        self.exit_image = pygame.image.load("./assets/images/Buttons/exit_button.png")
         #  button image scaling
-        self.button = pygame.transform.scale(self.image, (150, 100))  
+        self.start_button = pygame.transform.scale(self.start_image, (200, 100))  
+        self.exit_button = pygame.transform.scale(self.exit_image, (200, 100))  
         # action for the button
         self.callback = callback
     
     # draw the button
-    def draw(self, surface):
-        surface.blit(self.button, self.rect.topleft)
+    def draw_start_button(self, surface):
+        surface.blit(self.start_button, self.rect.topleft)
+
+    def draw_exit_button(self, surface):
+        surface.blit(self.exit_button, self.rect.topleft)
     # event handler
     # mouse click
     def handle_event(self, event):
