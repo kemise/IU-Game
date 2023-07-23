@@ -1,3 +1,4 @@
+
 import pygame
 import sys
 import random
@@ -158,9 +159,9 @@ class Game:
             [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
             [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 2], 
             [2, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 2, 2], 
-            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 2, 0, 5, 0, 0, 0, 2], 
-            [2, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 2], 
-            [2, 2, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
+            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 2, 0, 2, 0, 0, 0, 2], 
+            [2, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 2, 2, 0, 2, 0, 0, 0, 2], 
+            [2, 2, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 2, 2], 
             [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
             [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 2], 
             [2, 0, 2, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
@@ -169,8 +170,8 @@ class Game:
             [2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
             [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 2, 0, 2], 
             [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
-            [2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2], 
-            [2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2, 2], 
+            [2, 0, 2, 2, 2, 0, 0, 2, 0, 2, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2], 
+            [2, 0, 2, 0, 0, 0, 0, 2, 2, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2, 2], 
             [2, 0, 2, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 2], 
             [2, 0, 2, 0, 2, 2, 0, 0, 0, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2], 
             [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
@@ -183,7 +184,7 @@ class Game:
                     # format the image based on the tile_size
                     img = pygame.transform.scale(dirt_img, (self.tile_size, self.tile_size))
                     # create rect-object
-                    img_rect = img.get_rect()
+                    img_rect = img.get_rect()   
                     # x-pos
                     img_rect.x = col_count * self.tile_size
                     # y-pos
@@ -200,7 +201,10 @@ class Game:
                     self.tile_list.append(tile)
                 col_count += 1
             row_count += 1
+        # enemy list
         self.enemy_list = [self.enemy]
+        # game started variable
+        self.game_started = False
     
     # GRID FOR TESTING
     def draw_grid(self):
@@ -351,43 +355,93 @@ class Game:
             self.a.draw(self.screen)
             self.a.move_towards_player(self.player)
 
-
+        self.game_started = True
         pygame.display.update()
        
     
     
 
-
+    
         
 
+
     def run(self):
-            
-            # create new enemy event
-            new_enemy = pygame.USEREVENT
-            pygame.time.set_timer(new_enemy,10000)
-            
+        display_width, display_height = 800, 800
+        pygame.init()
+        self.screen = pygame.display.set_mode((display_width, display_height))
+        pygame.display.set_caption("Spielname")
 
-            while self.go:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        self.go = False
+        start_button = Button(display_width // 2 - 100, display_height // 2 - 50, 200, 100, self.create_world)
 
-                    # create new enemy
-                    if event.type == new_enemy:
-                        self.test  = Enemy(random.randint(0, self.display_width-40), random.randint(0, self.display_height-40), width=40, height=40, speed=2)
-                        self.enemy_list.append(self.test)
+        new_enemy = pygame.USEREVENT
+        pygame.time.set_timer(new_enemy, 10000)
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
                 
-                keys = pygame.key.get_pressed()
+                # check game started event
+                if not self.game_started:
+                    start_button.handle_event(event)
+
+                if event.type == new_enemy:
+                    test = Enemy(random.randint(0, display_width - 40), random.randint(0, display_height - 40),
+                                 width=40, height=40, speed=2)
+                    self.enemy_list.append(test)
+
+            keys = pygame.key.get_pressed()
+
+            
+            if self.game_started:
+                self.player.move(keys, display_width, display_height)
+
+            # handle the collision between player, enemies and objects
+            if self.check_collision():
+                self.show_game_over()
+                self.reset_game()
+
+            # set the background images as background for the screen
+            self.screen.blit(self.background, (0, 0))
+            
+            # if button is not triggered draw the start button at the screen
+            if not self.game_started:
+                start_button.draw(self.screen)
                 
-                self.player.move(keys, self.display_width, self.display_height)
-                #self.enemy.move_towards_player(self.player)
+            # if button triggered create the world
+            if self.game_started:
+                self.create_world() 
 
-                if self.check_collision():
-                    self.show_game_over()
-                    self.reset_game()
+            #Update the display in the loop
+            pygame.display.flip()
+            # set 30 images per second 
+            self.clock.tick(30)
 
-                self.create_world()
-                self.clock.tick(60)
+
+class Button:
+    def __init__(self, x, y, width, height, callback):
+
+        self.rect = pygame.Rect(x, y, width, height)
+        # image for the button
+        self.image = pygame.image.load("./assets/images/Buttons/tedr.png")
+        #  button image scaling
+        self.button = pygame.transform.scale(self.image, (150, 100))  
+        # action for the button
+        self.callback = callback
+    
+    # draw the button
+    def draw(self, surface):
+        surface.blit(self.button, self.rect.topleft)
+    # event handler
+    # mouse click
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(event.pos):
+                self.callback()
+
+
+
 
 
 
