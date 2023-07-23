@@ -27,13 +27,13 @@ class Player:
         self.is_walking = False
         if keys[pygame.K_UP] and self.pos_y > 0:
             self.pos_y -= self.speed
-        if keys[pygame.K_RIGHT] and self.pos_x + self.width < display_width:
+        elif keys[pygame.K_RIGHT] and self.pos_x + self.width < display_width:
             self.pos_x += self.speed
             #set to true and thus enable the index to be censored
             self.is_walking = True
-        if keys[pygame.K_DOWN] and self.pos_y + self.height < display_height:
+        elif keys[pygame.K_DOWN] and self.pos_y + self.height < display_height:
             self.pos_y += self.speed
-        if keys[pygame.K_LEFT] and self.pos_x > 0:
+        elif keys[pygame.K_LEFT] and self.pos_x > 0:
             self.pos_x -= self.speed
             #set to true and thus enable the index to be censored
             self.is_walking = True
@@ -91,7 +91,7 @@ class Enemy:
             self.pos_x -= min(self.speed, self.pos_x - target_x)
             #set to true and thus enable the index to be censored
             self.is_walking = True
-        if self.pos_y < target_y:
+        elif self.pos_y < target_y:
             self.pos_y += min(self.speed, target_y - self.pos_y)
             #set to true and thus enable the index to be censored
             self.is_walking = True
@@ -139,7 +139,7 @@ class Game:
         # background image
         self.background = pygame.image.load("./assets/images/world/BG.png")
         # player settings
-        self.player = Player(pos_x=self.tile_size*3, pos_y=self.tile_size*18.5, width=30, height=20, speed=5)
+        self.player = Player(pos_x=self.tile_size*3, pos_y=self.tile_size*18.5, width=30, height=30, speed=5)
         # enemy setting
         self.enemy = Enemy(random.randint(0, self.display_width-40), random.randint(0, self.display_height-40), width=40, height=40, speed=3)
         # for game over event
@@ -205,6 +205,8 @@ class Game:
         self.enemy_list = [self.enemy]
         # game started variable
         self.game_started = False
+        # game closed variable
+        self.game_exit = False
     
     # GRID FOR TESTING
     def draw_grid(self):
@@ -253,6 +255,9 @@ class Game:
 
     # check the collision between player and enemy
     def check_collision(self):
+
+
+        # player collision between enemies
         if self.player.pos_x < self.enemy.pos_x + self.enemy.width and self.player.pos_x + self.player.width > self.enemy.pos_x:
             if self.player.pos_y < self.enemy.pos_y + self.enemy.height and self.player.pos_y + self.player.height > self.enemy.pos_y:
                 return True
@@ -264,7 +269,7 @@ class Game:
             tile_rect = tile[1]
             if player_rect.colliderect(tile_rect):
                 # Check if the player is standing on a block from above
-                if player_rect.bottom > tile_rect.top and self.player.pos_y < tile_rect.top:
+                if player_rect.bottom > tile_rect.top and self.player.pos_y  < tile_rect.top:
                     self.player.pos_y = tile_rect.top - self.player.height
                 # Check if the player bumps into a block from below
                 # checked that the bottom edge of the player is below the bottom edge of the block
@@ -277,8 +282,6 @@ class Game:
                 elif player_rect.left < tile_rect.right and self.player.pos_x + self.player.width > tile_rect.right:
                     self.player.pos_x = tile_rect.right
         
-
-
 
         # enemy collision
         enemy_rect = pygame.Rect(self.enemy.pos_x, self.enemy.pos_y, self.enemy.width, self.enemy.height)
@@ -301,7 +304,7 @@ class Game:
                     self.enemy.pos_x = tile_rect.right
 
 
-
+        # enemy collision list
         for self.enemy in self.enemy_list:  
             # enemy collision for list enemies
             enemy_rect = pygame.Rect(self.enemy.pos_x, self.enemy.pos_y, self.enemy.width, self.enemy.height)
@@ -325,10 +328,6 @@ class Game:
             if self.player.pos_x < self.enemy.pos_x + self.enemy.width and self.player.pos_x + self.player.width > self.enemy.pos_x:
                 if self.player.pos_y < self.enemy.pos_y + self.enemy.height and self.player.pos_y + self.player.height > self.enemy.pos_y:
                     return True
-
-
-
-
         
         return False
     
@@ -354,32 +353,37 @@ class Game:
         for self.a in self.enemy_list:
             self.a.draw(self.screen)
             self.a.move_towards_player(self.player)
-
+        # set game status = true
         self.game_started = True
         pygame.display.update()
-       
-    
     
 
+    # function to end the game 
+    def exit_game_function(self):
+        pygame.quit()
+        sys.exit()
+
     
-        
-
-
+    
+    # primary run function
     def run(self):
         #start from pygame
         pygame.init()
-
         # create a screen with the dimensions
         self.screen = pygame.display.set_mode((self.display_width, self.display_height))
         # set the game name
         pygame.display.set_caption("Spielname")
         # objects for buttons
         start_button = Button(x=(self.display_width // 2 - 100),y=(self.display_height // 2 - 50), width=200, height=100, callback=self.create_world)
-        exit_button = Button(x=(self.display_width // 2 - 100),y=(self.display_height // 2 - -80), width=200, height=100, callback=self.create_world)
+        exit_button = Button(x=(self.display_width // 2 - 100),y=(self.display_height // 2 - -80), width=200, height=100, callback=self.exit_game_function)
+        headline = Button(x=(self.display_width // 8),y=(self.display_height // 8 * 1.1), width=200, height=100, callback=None)
 
         new_enemy = pygame.USEREVENT
+        
         pygame.time.set_timer(new_enemy, 10000)
 
+
+        # main loop
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -389,15 +393,21 @@ class Game:
                 # check game started event
                 if not self.game_started:
                     start_button.handle_event(event)
+                    
+                # check game exit event
+                if not self.game_exit:
+                    exit_button.handle_event(event)
 
+                # check game enemy event
                 if event.type == new_enemy:
+                    # create new enemies and append them to the list
                     test = Enemy(random.randint(0, self.display_width - 40), random.randint(0, self.display_height - 40),
                                  width=40, height=40, speed=2)
                     self.enemy_list.append(test)
 
             keys = pygame.key.get_pressed()
 
-            
+            # if var = true // player active
             if self.game_started:
                 self.player.move(keys, self.display_width, self.display_height)
 
@@ -413,10 +423,15 @@ class Game:
             if not self.game_started:
                 start_button.draw_start_button(self.screen)
                 exit_button.draw_exit_button(self.screen)
+                headline.draw_headline(self.screen)
                 
-            # if button triggered create the world
+            # if button (start) triggered create the world
             if self.game_started:
                 self.create_world() 
+
+             # if button (exit) triggered exit the game
+            if self.game_exit:
+                self.exit_game_function() 
 
             #Update the display in the loop
             pygame.display.flip()
@@ -431,9 +446,11 @@ class Button:
         # images for the buttons
         self.start_image = pygame.image.load("./assets/images/Buttons/start_button.png")
         self.exit_image = pygame.image.load("./assets/images/Buttons/exit_button.png")
+        self.headline_image = pygame.image.load("./assets/images/Buttons/headline.png")
         #  button image scaling
         self.start_button = pygame.transform.scale(self.start_image, (200, 100))  
         self.exit_button = pygame.transform.scale(self.exit_image, (200, 100))  
+        self.headline = pygame.transform.scale(self.headline_image, (600, 150))  
         # action for the button
         self.callback = callback
     
@@ -443,13 +460,17 @@ class Button:
 
     def draw_exit_button(self, surface):
         surface.blit(self.exit_button, self.rect.topleft)
+
+    def draw_headline(self, surface):
+        surface.blit(self.headline, self.rect.topleft)
+    
     # event handler
     # mouse click
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
                 self.callback()
-
+    
 
 
 
