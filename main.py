@@ -10,6 +10,8 @@ from src.enemys.enemy import Enemy
 from src.player.player import Player
 
 pygame.init()
+pygame.mixer.init()
+
 
 
 
