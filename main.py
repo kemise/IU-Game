@@ -2,6 +2,8 @@
 import pygame
 import sys
 import random
+from pathfinding.core.grid import Grid
+from pathfinding.finder.a_star import AStarFinder
 
 pygame.init()
 
@@ -75,34 +77,103 @@ class Enemy:
         # test criterion whether the figure is moving
         self.is_walking = False 
 
+    def find_shortest_path(self, player):
+        TILE_SIZE = 40
 
+        # Berechne die Zielkachel, auf der der Spieler sich befindet
+        target_tile_x = int(player.pos_x // TILE_SIZE)
+
+        target_tile_y = int(player.pos_y // TILE_SIZE)
+
+        # Erstelle die Spielfeldmatrix game_matrix
+        game_matrix = [
+            [0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0],
+            [0	,1	,0	,1	,0	,1	,1	,1	,1	,1	,0	,1	,1	,0	,1	,1	,1	,1	,1	,0],
+            [0	,1	,0	,1	,0	,1	,0	,0	,0	,1	,0	,1	,1	,0	,1	,1	,1	,1	,1	,0],
+            [0	,1	,1	,1	,1	,1	,1	,0	,0	,1	,0	,1	,1	,0	,1	,1	,0	,1	,1	,0],
+            [0	,1	,1	,1	,1	,1	,1	,0	,0	,1	,0	,1	,1	,0	,1	,1	,0	,1	,1	,0],
+            [0	,1	,1	,1	,1	,1	,1	,0	,0	,1	,1	,1	,1	,1	,1	,1	,0	,1	,0	,0],
+            [0	,0	,0	,0	,0	,1	,1	,1	,0	,1	,1	,1	,1	,1	,1	,1	,0	,1	,1	,0],
+            [0	,1	,0	,1	,1	,1	,1	,1	,0	,0	,0	,1	,0	,0	,0	,1	,0	,1	,1	,0],
+            [0	,1	,0	,1	,1	,1	,1	,1	,0	,1	,1	,1	,1	,0	,1	,1	,0	,1	,1	,0],
+            [0	,1	,0	,1	,1	,1	,1	,0	,0	,1	,1	,1	,1	,0	,1	,1	,0	,1	,0	,0],
+            [0	,1	,1	,1	,0	,1	,1	,1	,0	,1	,1	,1	,1	,0	,1	,1	,0	,1	,1	,0],
+            [0	,1	,1	,1	,0	,1	,1	,1	,0	,1	,0	,1	,1	,1	,1	,1	,0	,1	,1	,0],
+            [0	,1	,1	,1	,0	,1	,1	,1	,0	,1	,0	,1	,1	,1	,1	,1	,0	,1	,1	,0],
+            [0	,1	,1	,1	,0	,0	,1	,1	,1	,1	,0	,0	,0	,0	,0	,1	,0	,0	,1	,0],
+            [0	,1	,0	,0	,0	,1	,1	,0	,1	,1	,0	,1	,1	,1	,1	,1	,1	,0	,1	,0],
+            [0	,1	,0	,1	,0	,1	,1	,0	,1	,1	,0	,1	,1	,1	,1	,1	,1	,1	,1	,0],
+            [0	,1	,0	,1	,0	,1	,1	,0	,0	,0	,0	,1	,0	,0	,0	,1	,1	,1	,1	,0],
+            [0	,1	,1	,1	,1	,1	,1	,1	,1	,1	,1	,1	,1	,1	,1	,1	,1	,0	,1	,0],
+            [0	,1	,1	,1	,0	,1	,1	,0	,1	,1	,1	,1	,1	,1	,1	,1	,1	,0	,1	,0],
+            [0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0]
+
+            ]
+
+        # Erstelle die game_grid Grid-Instanz
+        game_grid = Grid(matrix=game_matrix)
+
+        # Startknoten (gegnerische Position)
+        start_x = (self.pos_x // TILE_SIZE)
+        start_y =(self.pos_y // TILE_SIZE)
+
+
+        start_node = game_grid.node(start_x,start_y)
+
+
+        # Zielknoten (Spielerposition)
+
+        target_node = game_grid.node(target_tile_x, target_tile_y)
+
+        # Verwende den A*-Algorithmus, um den kürzesten Weg zu finden
+        finder = AStarFinder()
+        path, runs = finder.find_path(start=start_node, end=target_node, grid=game_grid)
+        return path
 
     # control the movement of the opponent
     def move_towards_player(self, player):
-        target_x = player.pos_x
-        target_y = player.pos_y
+        TILE_SIZE = 40
 
-        # Check whether speed is greater than the distance and then use the smaller value with min. This prevents inconsistency/flickering.
-        if self.pos_x < target_x:
-            self.pos_x += min(self.speed, target_x - self.pos_x)
-            #set to true and thus enable the index to be censored
-            self.is_walking = True
-        elif self.pos_x > target_x:
-            self.pos_x -= min(self.speed, self.pos_x - target_x)
-            #set to true and thus enable the index to be censored
-            self.is_walking = True
-        elif self.pos_y < target_y:
-            self.pos_y += min(self.speed, target_y - self.pos_y)
-            #set to true and thus enable the index to be censored
-            self.is_walking = True
-        elif self.pos_y > target_y:
-            self.pos_y -= min(self.speed, self.pos_y - target_y)
-            #set to true and thus enable the index to be censored
+        # Umwandlung der Pixelkoordinaten in Rasterkoordinaten
+        target_tile_x = int(player.pos_x // TILE_SIZE)
+        target_tile_y = int(player.pos_y // TILE_SIZE)
+
+        # Finde den kürzesten Weg zum Spieler
+        shortest_path = self.find_shortest_path(player)
+
+        if len(shortest_path) > 1:
+            # Nächsten Schritt aus dem kürzesten Weg auswählen
+            next_tile_x, next_tile_y = shortest_path[1]
+            print(shortest_path[1])
+
+            # Zielposition in Pixeln berechnen
+            target_x = next_tile_x * TILE_SIZE
+            target_y = next_tile_y * TILE_SIZE
+
+            # Bestimme die Richtung, in die sich der Gegner bewegen soll
+            move_x = 0
+            move_y = 0
+
+            if self.pos_x < target_x:
+                move_x = 1
+            elif self.pos_x > target_x:
+                move_x = -1
+
+            if self.pos_y < target_y:
+                move_y = 1
+            elif self.pos_y > target_y:
+                move_y = -1
+
+            # Bewege den Gegner in der entsprechenden Richtung
+            self.pos_x += move_x * self.speed
+            self.pos_y += move_y * self.speed
+
             self.is_walking = True
 
-        if self.is_walking:
-            
-                    self.current_frame = (self.current_frame + 1) % len(self.animation_frames)
+            # Inkrementiere den Animationsframe, wenn sich der Gegner bewegt
+            if self.is_walking:
+                self.current_frame = (self.current_frame + 1) % len(self.animation_frames)
+
 
 
     # draw the enemy
@@ -128,6 +199,12 @@ class Enemy:
 
 class Game:
     def __init__(self):
+        #game sound
+        self.game_over_sound = pygame.mixer.Sound("./assets/music/game_over.mp3")
+        self.game_sound = pygame.mixer.Sound("./assets/music/game.mp3")
+        self.menu_sound = pygame.mixer.Sound("./assets/music/main_screen.mp3")
+
+        # display dimensions
         self.display_width = 800
         self.display_height = 800
         # game variables
@@ -139,9 +216,9 @@ class Game:
         # background image
         self.background = pygame.image.load("./assets/images/world/BG.png")
         # player settings
-        self.player = Player(pos_x=self.tile_size*3, pos_y=self.tile_size*18.5, width=30, height=30, speed=5)
+        self.player = Player(pos_x=self.tile_size*3, pos_y=self.tile_size*18.5, width=40, height=40, speed=5)
         # enemy setting
-        self.enemy = Enemy(random.randint(0, self.display_width-40), random.randint(0, self.display_height-40), width=40, height=40, speed=3)
+        self.enemy = Enemy(random.randint(0, self.display_width-40), random.randint(0, self.display_height-40), width=40, height=40, speed=2)
         # for game over event
         self.game_over_font = pygame.font.SysFont(None, 80)
         # screen name
@@ -155,26 +232,26 @@ class Game:
         row_count = 0
         # map structure
         self.world_data = [
-            [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], 
-            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
-            [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 2], 
-            [2, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 2, 2], 
-            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 2, 0, 2, 0, 0, 0, 2], 
-            [2, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 2, 2, 0, 2, 0, 0, 0, 2], 
-            [2, 2, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 2, 2], 
-            [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
-            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 2], 
-            [2, 0, 2, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
-            [2, 0, 0, 2, 0, 0, 4, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 2], 
-            [2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 2], 
-            [2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
-            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 2, 0, 2], 
-            [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2], 
-            [2, 0, 2, 2, 2, 0, 0, 2, 0, 2, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2], 
-            [2, 0, 2, 0, 0, 0, 0, 2, 2, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2, 2], 
-            [2, 0, 2, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 2], 
-            [2, 0, 2, 0, 2, 2, 0, 0, 0, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2], 
-            [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+            [2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2],
+            [2	,0	,2	,0	,2	,0	,0	,0	,0	,0	,2	,0	,0	,2	,0	,0	,0	,0	,0	,2],
+            [2	,0	,2	,0	,2	,0	,2	,2	,2	,0	,2	,0	,0	,2	,0	,0	,0	,0	,0	,2],
+            [2	,0	,0	,0	,0	,0	,0	,2	,2	,0	,2	,0	,0	,2	,0	,0	,2	,0	,0	,2],
+            [2	,0	,0	,0	,0	,0	,0	,2	,2	,0	,2	,0	,0	,2	,0	,0	,2	,0	,0	,2],
+            [2	,0	,0	,0	,0	,0	,0	,2	,2	,0	,0	,0	,0	,0	,0	,0	,2	,0	,2	,2],
+            [2	,2	,2	,2	,2	,0	,0	,0	,2	,0	,0	,0	,0	,0	,0	,0	,2	,0	,0	,2],
+            [2	,0	,2	,0	,0	,0	,0	,0	,2	,2	,2	,0	,2	,2	,2	,0	,2	,0	,0	,2],
+            [2	,0	,2	,0	,0	,0	,0	,0	,2	,0	,0	,0	,0	,2	,0	,0	,2	,0	,0	,2],
+            [2	,0	,2	,0	,0	,0	,0	,2	,2	,0	,0	,0	,0	,2	,0	,0	,2	,0	,2	,2],
+            [2	,0	,0	,0	,2	,0	,0	,0	,2	,0	,0	,0	,0	,2	,0	,0	,2	,0	,0	,2],
+            [2	,0	,0	,0	,2	,0	,0	,0	,2	,0	,2	,0	,0	,0	,0	,0	,2	,0	,0	,2],
+            [2	,0	,0	,0	,2	,0	,0	,0	,2	,0	,2	,0	,0	,0	,0	,0	,2	,0	,0	,2],
+            [2	,0	,0	,0	,2	,2	,0	,0	,0	,0	,2	,2	,2	,2	,2	,0	,2	,2	,0	,2],
+            [2	,0	,2	,2	,2	,0	,0	,2	,0	,0	,2	,0	,0	,0	,0	,0	,0	,2	,0	,2],
+            [2	,0	,2	,0	,2	,0	,0	,2	,0	,0	,2	,0	,0	,0	,0	,0	,0	,0	,0	,2],
+            [2	,0	,2	,0	,2	,0	,0	,2	,2	,2	,2	,0	,2	,2	,2	,0	,0	,0	,0	,2],
+            [2	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,0	,2	,0	,2],
+            [2	,0	,0	,0	,2	,0	,0	,2	,0	,0	,0	,0	,0	,0	,0	,0	,0	,2	,0	,2],
+            [2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2]
             ]
         # mapping the the images to the playground
         for row in self.world_data:
@@ -325,6 +402,7 @@ class Game:
                     # Check if the enemy bumps into a block from the left
                     elif enemy_rect.left < tile_rect.right and self.enemy.pos_x + self.enemy.width > tile_rect.right:
                         self.enemy.pos_x = tile_rect.right
+            
             if self.player.pos_x < self.enemy.pos_x + self.enemy.width and self.player.pos_x + self.player.width > self.enemy.pos_x:
                 if self.player.pos_y < self.enemy.pos_y + self.enemy.height and self.player.pos_y + self.player.height > self.enemy.pos_y:
                     return True
@@ -339,6 +417,14 @@ class Game:
         self.enemy.pos_y = random.randint(0, self.display_height - 40)
         self.enemy_list = []
         self.enemy_list = [self.enemy]
+        self.sound_game_over_check= False
+        self.sound_played = False
+        self.sound_menu_check = False
+        self.game_over_sound.stop()
+        self.game_sound.stop()
+        self.sound(sound_game_over_check=self.sound_game_over_check,sound_menu_check=self.sound_menu_check,sound_played=self.sound_played)
+
+
 
 
     def create_world(self):
@@ -363,6 +449,33 @@ class Game:
         pygame.quit()
         sys.exit()
 
+    # music controlling
+    def sound(self, sound_played, sound_menu_check, sound_game_over_check):
+            
+            
+            # games sound config
+            # menu sound
+            if not self.game_started:
+                if not self.sound_menu_check:
+                    self.menu_sound.play(-1)
+                    self.sound_menu_check = True
+                    return sound_menu_check
+            # game sound sound
+            if self.game_started:
+                self.menu_sound.stop()
+                if not self.sound_played:
+                    self.game_sound.play(-1)
+                    self.sound_played = True
+                    return self.sound_played 
+
+            # game over sound
+            if self.game_started:
+                if self.check_collision():
+                     # change game sound to game over sound
+                    self.game_sound.stop()
+                    self.game_over_sound.play()
+                    self.sound_game_over_check = True
+                    return self.sound_game_over_check
     
     
     # primary run function
@@ -382,9 +495,17 @@ class Game:
         
         pygame.time.set_timer(new_enemy, 10000)
 
+        # Sound-Flag hinzufügen
+        self.sound_played = False
+        self.sound_menu_check = False
+        self.sound_game_over_check = False
+
 
         # main loop
         while True:
+
+
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -407,14 +528,20 @@ class Game:
 
             keys = pygame.key.get_pressed()
 
+            # music 
+            self.sound(sound_game_over_check=self.sound_game_over_check, sound_menu_check=self.sound_menu_check, sound_played = self.sound_played )
+
+            
+
             # if var = true // player active
             if self.game_started:
                 self.player.move(keys, self.display_width, self.display_height)
 
             # handle the collision between player, enemies and objects
-            if self.check_collision():
-                self.show_game_over()
-                self.reset_game()
+            if self.game_started:
+                if self.check_collision():
+                    self.show_game_over()
+                    self.reset_game()
 
             # set the background images as background for the screen
             self.screen.blit(self.background, (0, 0))
@@ -477,6 +604,14 @@ class Button:
 
 
 
+
+    
+    
+
 if __name__ == "__main__":
     game = Game()
     game.run()
+
+'''if __name__ == "__main__":
+    game = Grid_path_finder()
+'''
