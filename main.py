@@ -6,6 +6,8 @@ from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 from src.UI.Buttons import Button
 from src.enemys.enemy import Enemy
+import time
+import sqlite3
 
 from src.player.player import Player
 
@@ -17,6 +19,15 @@ pygame.mixer.init()
 
 class Game:
     def __init__(self):
+        # DB
+        self.conn = sqlite3.connect("game.db")
+        self.cursor = self.conn.cursor()
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS scores (time REAL)")
+        self.conn.commit()
+        # for scoring
+        self.start_time = None
+        self.end_time = None
+
         #game sound
         self.game_over_sound = pygame.mixer.Sound("./assets/music/game_over.mp3")
         self.game_sound = pygame.mixer.Sound("./assets/music/game.mp3")
@@ -117,11 +128,15 @@ class Game:
 
 
     def show_game_over(self):
-        # event text
+        # get the score
+        self.score_text = self.scoring()
+        # format to surface
+        game_over_score_text = self.game_over_font.render(f"{self.score_text}", True, (255, 0, 0))
         game_over_text = self.game_over_font.render("Game Over", True, (255, 0, 0))
         restart_text = self.game_over_font.render("Press 'R' to play again", True, (255, 0, 0))
         close_text = self.game_over_font.render("Press 'C' to close", True, (255, 0, 0))
         # rendering the event text
+        self.screen.blit(game_over_score_text, (self.display_width // 2 - game_over_text.get_width() // 2, self.display_height // 2 - game_over_text.get_height() // 2 - 130))
         self.screen.blit(game_over_text, (self.display_width // 2 - game_over_text.get_width() // 2, self.display_height // 2 - game_over_text.get_height() // 2))
         self.screen.blit(restart_text, (self.display_width // 2 - restart_text.get_width() // 2, self.display_height // 2 + game_over_text.get_height() // 2 + 60))
         self.screen.blit(close_text, (self.display_width // 2 - close_text.get_width() // 2, self.display_height // 2 + game_over_text.get_height() // 2 + 130))
@@ -156,7 +171,9 @@ class Game:
         if self.player.pos_x < self.enemy.pos_x + self.enemy.width and self.player.pos_x + self.player.width > self.enemy.pos_x:
             if self.player.pos_y < self.enemy.pos_y + self.enemy.height and self.player.pos_y + self.player.height > self.enemy.pos_y:
                 return True
-        
+
+
+
         # player collision
         player_rect = pygame.Rect(self.player.pos_x, self.player.pos_y, self.player.width, self.player.height)
         # check if the rectangle of the player overlaps with the rectangle of the block
@@ -259,6 +276,8 @@ class Game:
             self.a.move_towards_player(self.player)
         # set game status = true
         self.game_started = True
+        # for scoring
+        self.start_time = time.time()
         pygame.display.update()
     
 
@@ -291,10 +310,32 @@ class Game:
                 if self.check_collision():
                      # change game sound to game over sound
                     self.game_sound.stop()
-                    self.game_over_sound.play()
+                    self.game_over_sound.play(-1)
                     self.sound_game_over_check = True
                     return self.sound_game_over_check
     
+    #stop the time and calculate the score
+    def scoring(self):
+        self.end_time = time.time()
+        elapsed_time = self.end_time - self.start_time
+        print(elapsed_time)
+        score = int(elapsed_time*100)
+        print("Ich bin der Score")
+        print(score)
+        self.save_score(score)
+        return score
+
+    # save the score in the db
+    def save_score(self, time):
+        # save the time in the db
+        self.cursor.execute("INSERT INTO scores (time) VALUES (?)", (time,))
+        self.conn.commit()
+    
+    # get the best scores
+    def get_score(self):
+        self.cursor.execute("SELECT time FROM scores ORDER BY time ASC LIMIT 3")
+        best_times = self.cursor.fetchall()
+        return best_times
     
     # primary run function
     def run(self):
