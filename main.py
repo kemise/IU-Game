@@ -19,6 +19,7 @@ pygame.mixer.init()
 
 class Game:
     def __init__(self):
+        self.game_score:int
         # DB
         self.conn = sqlite3.connect("game.db")
         self.cursor = self.conn.cursor()
@@ -129,17 +130,27 @@ class Game:
 
     def show_game_over(self):
         # get the score
-        self.score_text = self.scoring()
+        # self.score_text = self.scoring()
+        # test
+        self.score_text = self.game_score
+        
         # format to surface
-        game_over_score_text = self.game_over_font.render(f"{self.score_text}", True, (255, 0, 0))
+        game_over_score_text = self.game_over_font.render(f"Your Score:", True, (255, 0, 0))
+        game_over_score_text_points = self.game_over_font.render(f"{self.score_text}", True, (255, 0, 0))
         game_over_text = self.game_over_font.render("Game Over", True, (255, 0, 0))
         restart_text = self.game_over_font.render("Press 'R' to play again", True, (255, 0, 0))
         close_text = self.game_over_font.render("Press 'C' to close", True, (255, 0, 0))
         # rendering the event text
-        self.screen.blit(game_over_score_text, (self.display_width // 2 - game_over_text.get_width() // 2, self.display_height // 2 - game_over_text.get_height() // 2 - 130))
-        self.screen.blit(game_over_text, (self.display_width // 2 - game_over_text.get_width() // 2, self.display_height // 2 - game_over_text.get_height() // 2))
-        self.screen.blit(restart_text, (self.display_width // 2 - restart_text.get_width() // 2, self.display_height // 2 + game_over_text.get_height() // 2 + 60))
-        self.screen.blit(close_text, (self.display_width // 2 - close_text.get_width() // 2, self.display_height // 2 + game_over_text.get_height() // 2 + 130))
+        # game_over_score_text
+        self.screen.blit(game_over_score_text, (self.display_width // 2 - game_over_text.get_width() // 2, self.display_height // 2 - game_over_text.get_height() // 2 - 30))
+        # game_over_score_text_points
+        self.screen.blit(game_over_score_text_points, (self.display_width // 2 - game_over_text.get_width() // 6, self.display_height // 2 - game_over_text.get_height() // 2 +40))
+        # game_over_text
+        self.screen.blit(game_over_text, (self.display_width // 2 - game_over_text.get_width() // 2, self.display_height // 2 - game_over_text.get_height() // 2 - 150))
+        # restart_text
+        self.screen.blit(restart_text, (self.display_width // 2 - restart_text.get_width() // 2, self.display_height // 2 + game_over_text.get_height() // 2 + 160))
+        # close_text
+        self.screen.blit(close_text, (self.display_width // 2 - close_text.get_width() // 2, self.display_height // 2 + game_over_text.get_height() // 2 + 230))
         pygame.display.update()
 
         waiting_for_input = True
@@ -313,22 +324,11 @@ class Game:
                     self.game_over_sound.play(-1)
                     self.sound_game_over_check = True
                     return self.sound_game_over_check
-    
-    #stop the time and calculate the score
-    def scoring(self):
-        self.end_time = time.time()
-        elapsed_time = self.end_time - self.start_time
-        print(elapsed_time)
-        score = int(elapsed_time*100)
-        print("Ich bin der Score")
-        print(score)
-        self.save_score(score)
-        return score
 
     # save the score in the db
-    def save_score(self, time):
+    def save_score(self, game_score):
         # save the time in the db
-        self.cursor.execute("INSERT INTO scores (time) VALUES (?)", (time,))
+        self.cursor.execute("INSERT INTO scores (time) VALUES (?)", (game_score))
         self.conn.commit()
     
     # get the best scores
@@ -339,6 +339,9 @@ class Game:
     
     # primary run function
     def run(self):
+        self.game_score=int(0)
+        self.hallo = "test"
+        print(self.hallo)
         #start from pygame
         pygame.init()
         # create a screen with the dimensions
@@ -359,11 +362,8 @@ class Game:
         self.sound_menu_check = False
         self.sound_game_over_check = False
 
-
         # main loop
         while True:
-
-
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -384,13 +384,15 @@ class Game:
                     test = Enemy(random.randint(0, self.display_width - 40), random.randint(0, self.display_height - 40),
                                  width=40, height=40, speed=2)
                     self.enemy_list.append(test)
+            
+                # game_score
+                if self.game_started: 
+                    self.game_score += 1
 
             keys = pygame.key.get_pressed()
 
             # music 
             self.sound(sound_game_over_check=self.sound_game_over_check, sound_menu_check=self.sound_menu_check, sound_played = self.sound_played )
-
-            
 
             # if var = true // player active
             if self.game_started:
@@ -413,7 +415,7 @@ class Game:
                 
             # if button (start) triggered create the world
             if self.game_started:
-                self.create_world() 
+                self.create_world()      
 
              # if button (exit) triggered exit the game
             if self.game_exit:
@@ -423,16 +425,6 @@ class Game:
             pygame.display.flip()
             # set 30 images per second 
             self.clock.tick(30)
-
-
-
-
-
-
-
-
-    
-    
 
 if __name__ == "__main__":
     game = Game()
