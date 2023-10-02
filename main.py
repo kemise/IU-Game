@@ -177,13 +177,10 @@ class Game:
     # check the collision between player and enemy
     def check_collision(self):
 
-
         # player collision between enemies
         if self.player.pos_x < self.enemy.pos_x + self.enemy.width and self.player.pos_x + self.player.width > self.enemy.pos_x:
             if self.player.pos_y < self.enemy.pos_y + self.enemy.height and self.player.pos_y + self.player.height > self.enemy.pos_y:
                 return True
-
-
 
         # player collision
         player_rect = pygame.Rect(self.player.pos_x, self.player.pos_y, self.player.width, self.player.height)
@@ -204,7 +201,6 @@ class Game:
                 # Check if the player bumps into a block from the left
                 elif player_rect.left < tile_rect.right and self.player.pos_x + self.player.width > tile_rect.right:
                     self.player.pos_x = tile_rect.right
-        
 
         # enemy collision
         enemy_rect = pygame.Rect(self.enemy.pos_x, self.enemy.pos_y, self.enemy.width, self.enemy.height)
@@ -225,7 +221,6 @@ class Game:
                 # Check if the enemy bumps into a block from the left
                 elif enemy_rect.left < tile_rect.right and self.enemy.pos_x + self.enemy.width > tile_rect.right:
                     self.enemy.pos_x = tile_rect.right
-
 
         # enemy collision list
         for self.enemy in self.enemy_list:  
@@ -252,7 +247,7 @@ class Game:
             if self.player.pos_x < self.enemy.pos_x + self.enemy.width and self.player.pos_x + self.player.width > self.enemy.pos_x:
                 if self.player.pos_y < self.enemy.pos_y + self.enemy.height and self.player.pos_y + self.player.height > self.enemy.pos_y:
                     return True
-        
+
         return False
     
     # reset the game if the player was catched by the enemy
@@ -269,9 +264,9 @@ class Game:
         self.game_over_sound.stop()
         self.game_sound.stop()
         self.sound(sound_game_over_check=self.sound_game_over_check,sound_menu_check=self.sound_menu_check,sound_played=self.sound_played)
-
-
-
+        # for scoring
+        self.game_score = 0
+        
 
     def create_world(self):
         # placed den screen (Start at x = 0 and y =0)
@@ -287,8 +282,6 @@ class Game:
             self.a.move_towards_player(self.player)
         # set game status = true
         self.game_started = True
-        # for scoring
-        self.start_time = time.time()
         pygame.display.update()
     
 
@@ -316,14 +309,6 @@ class Game:
                     self.sound_played = True
                     return self.sound_played 
 
-            # game over sound
-            if self.game_started:
-                if self.check_collision():
-                     # change game sound to game over sound
-                    self.game_sound.stop()
-                    self.game_over_sound.play(-1)
-                    self.sound_game_over_check = True
-                    return self.sound_game_over_check
 
     # save the score in the db
     def save_score(self, game_score):
@@ -340,8 +325,6 @@ class Game:
     # primary run function
     def run(self):
         self.game_score=int(0)
-        self.hallo = "test"
-        print(self.hallo)
         #start from pygame
         pygame.init()
         # create a screen with the dimensions
@@ -379,7 +362,7 @@ class Game:
                     exit_button.handle_event(event)
 
                 # check game enemy event
-                if event.type == new_enemy:
+                if event.type == new_enemy and self.game_started:
                     # create new enemies and append them to the list
                     test = Enemy(random.randint(0, self.display_width - 40), random.randint(0, self.display_height - 40),
                                  width=40, height=40, speed=2)
@@ -398,9 +381,14 @@ class Game:
             if self.game_started:
                 self.player.move(keys, self.display_width, self.display_height)
 
-            # handle the collision between player, enemies and objects
+            # handle the gameover properties (collision between player, enemies and objects)
             if self.game_started:
                 if self.check_collision():
+                    # game over sound
+                    # change game sound to game over sound
+                    self.game_sound.stop()
+                    self.game_over_sound.play(-1)
+                    self.sound_game_over_check = True
                     self.show_game_over()
                     self.reset_game()
 
