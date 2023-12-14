@@ -23,11 +23,8 @@ class Game:
         # DB
         self.conn = sqlite3.connect("game.db")
         self.cursor = self.conn.cursor()
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS scores (time REAL)")
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS scores (Score REAL)")
         self.conn.commit()
-        # for scoring
-        self.start_time = None
-        self.end_time = None
 
         #game sound
         self.game_over_sound = pygame.mixer.Sound("./assets/music/game_over.mp3")
@@ -51,6 +48,8 @@ class Game:
         self.enemy = Enemy(random.randint(0, self.display_width-40), random.randint(0, self.display_height-40), width=40, height=40, speed=2)
         # for game over event
         self.game_over_font = pygame.font.SysFont(None, 80)
+        self.game_over_font_text = pygame.font.SysFont(None, 50)
+        self.game_over_font_text_score = pygame.font.SysFont(None, 30)
         # screen name
         pygame.display.set_caption("MyGame")
         self.go = True
@@ -63,12 +62,12 @@ class Game:
         # map structure
         self.world_data = [
             [2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2	,2],
-            [2	,0	,2	,0	,2	,0	,0	,0	,0	,0	,2	,0	,0	,2	,0	,0	,0	,0	,0	,2],
-            [2	,0	,2	,0	,2	,0	,2	,2	,2	,0	,2	,0	,0	,2	,0	,0	,0	,0	,0	,2],
-            [2	,0	,0	,0	,0	,0	,0	,2	,2	,0	,2	,0	,0	,2	,0	,0	,2	,0	,0	,2],
+            [2	,0	,0	,0	,0	,0	,0	,0	,0	,0	,2	,0	,0	,2	,0	,0	,0	,0	,0	,2],
+            [2	,0	,0	,0	,2	,2	,2	,2	,2	,0	,2	,0	,0	,2	,0	,0	,0	,0	,0	,2],
+            [2	,2	,0	,0	,0	,0	,0	,2	,2	,0	,2	,0	,0	,2	,0	,0	,2	,0	,0	,2],
             [2	,0	,0	,0	,0	,0	,0	,2	,2	,0	,2	,0	,0	,2	,0	,0	,2	,0	,0	,2],
             [2	,0	,0	,0	,0	,0	,0	,2	,2	,0	,0	,0	,0	,0	,0	,0	,2	,0	,2	,2],
-            [2	,2	,2	,2	,2	,0	,0	,0	,2	,0	,0	,0	,0	,0	,0	,0	,2	,0	,0	,2],
+            [2	,2	,2	,2	,0	,0	,0	,0	,2	,0	,0	,0	,0	,0	,0	,0	,2	,0	,0	,2],
             [2	,0	,2	,0	,0	,0	,0	,0	,2	,2	,2	,0	,2	,2	,2	,0	,2	,0	,0	,2],
             [2	,0	,2	,0	,0	,0	,0	,0	,2	,0	,0	,0	,0	,2	,0	,0	,2	,0	,0	,2],
             [2	,0	,2	,0	,0	,0	,0	,2	,2	,0	,0	,0	,0	,2	,0	,0	,2	,0	,2	,2],
@@ -191,6 +190,7 @@ class Game:
                 # Check if the player is standing on a block from above
                 if player_rect.bottom > tile_rect.top and self.player.pos_y  < tile_rect.top:
                     self.player.pos_y = tile_rect.top - self.player.height
+
                 # Check if the player bumps into a block from below
                 # checked that the bottom edge of the player is below the bottom edge of the block
                 elif player_rect.top < tile_rect.bottom and self.player.pos_y + self.player.height > tile_rect.bottom:
@@ -256,7 +256,7 @@ class Game:
         self.player.pos_y = self.tile_size*18.5
         self.enemy.pos_x = random.randint(0, self.display_width - 40)
         self.enemy.pos_y = random.randint(0, self.display_height - 40)
-        self.enemy_list = []
+
         self.enemy_list = [self.enemy]
         self.sound_game_over_check= False
         self.sound_played = False
@@ -312,15 +312,18 @@ class Game:
 
     # save the score in the db
     def save_score(self, game_score):
-        # save the time in the db
-        self.cursor.execute("INSERT INTO scores (time) VALUES (?)", (game_score))
+        # save the score in the db
+        print(game_score)
+        self.cursor.execute(f"INSERT INTO scores VALUES ({game_score})")
         self.conn.commit()
     
     # get the best scores
     def get_score(self):
-        self.cursor.execute("SELECT time FROM scores ORDER BY time ASC LIMIT 3")
-        best_times = self.cursor.fetchall()
-        return best_times
+        self.cursor.execute("SELECT score FROM scores ORDER BY score DESC LIMIT 3")
+        best_score = self.cursor.fetchall()
+        print(type(best_score))
+        best_score_format = f"#1: {int(best_score[0][0])}"
+        return best_score_format
     
     # primary run function
     def run(self):
@@ -330,12 +333,18 @@ class Game:
         # create a screen with the dimensions
         self.screen = pygame.display.set_mode((self.display_width, self.display_height))
         # set the game name
-        pygame.display.set_caption("Spielname")
+        pygame.display.set_caption("Sand")
         # objects for buttons
         start_button = Button(x=(self.display_width // 2 - 100),y=(self.display_height // 2 - 50), width=200, height=100, callback=self.create_world)
         exit_button = Button(x=(self.display_width // 2 - 100),y=(self.display_height // 2 - -80), width=200, height=100, callback=self.exit_game_function)
         headline = Button(x=(self.display_width // 8),y=(self.display_height // 8 * 1.1), width=200, height=100, callback=None)
-
+        score = Button(x=(self.display_width // 4),y=(self.display_height // 2 - -250), width=200, height=100, callback=None)
+        # get and format best scores
+        self.highscore_font_size = 48
+        # format text
+        self.score_text = self.game_over_font_text.render("Highscore:", True, (0, 0, 0))
+        best_score = self.game_over_font_text_score.render(f"{self.get_score()}", True, (0, 0, 0))
+        # event for new enemy
         new_enemy = pygame.USEREVENT
         
         pygame.time.set_timer(new_enemy, 10000)
@@ -389,6 +398,7 @@ class Game:
                     self.game_sound.stop()
                     self.game_over_sound.play(-1)
                     self.sound_game_over_check = True
+                    self.save_score(game_score=self.game_score)
                     self.show_game_over()
                     self.reset_game()
 
@@ -400,6 +410,11 @@ class Game:
                 start_button.draw_start_button(self.screen)
                 exit_button.draw_exit_button(self.screen)
                 headline.draw_headline(self.screen)
+                score.draw_score(self.screen)
+                # rendering the event text
+                # game_over_score_text
+                self.screen.blit(self.score_text, (self.display_width // 2 - self.score_text.get_width() // 2, self.display_height // 2 - self.score_text.get_height() // 2 - -310))
+                self.screen.blit(best_score, (self.display_width // 2 - best_score.get_width() // 2, self.display_height // 2 - best_score.get_height() // 2 - -350))
                 
             # if button (start) triggered create the world
             if self.game_started:
@@ -417,7 +432,3 @@ class Game:
 if __name__ == "__main__":
     game = Game()
     game.run()
-
-'''if __name__ == "__main__":
-    game = Grid_path_finder()
-'''
