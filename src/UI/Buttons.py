@@ -12,10 +12,12 @@ class Button:
         self.start_image = pygame.image.load("./assets/images/Buttons/start_button.png")
         self.exit_image = pygame.image.load("./assets/images/Buttons/exit_button.png")
         self.headline_image = pygame.image.load("./assets/images/Buttons/headline.png")
+        self.score_image = pygame.image.load("./assets/images/Buttons/score.png")
         #  button image scaling
         self.start_button = pygame.transform.scale(self.start_image, (200, 100))  
         self.exit_button = pygame.transform.scale(self.exit_image, (200, 100))  
         self.headline = pygame.transform.scale(self.headline_image, (600, 150))  
+        self.score = pygame.transform.scale(self.score_image, (400, 150))  
         # action for the button
         self.callback = callback
     
@@ -28,6 +30,9 @@ class Button:
 
     def draw_headline(self, surface):
         surface.blit(self.headline, self.rect.topleft)
+
+    def draw_score(self, surface):
+        surface.blit(self.score, self.rect.topleft)  
     
     # event handler
     # mouse click
