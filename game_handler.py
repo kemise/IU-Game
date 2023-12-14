@@ -6,8 +6,6 @@ from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 from src.UI.Buttons import Button
 from src.enemys.enemy import Enemy
-import time
-import sqlite3
 from src.player.scoring import ScoringHandler
 from src.player.player import Player
 

@@ -24,6 +24,5 @@ class ScoringHandler():
         # save the score in the db
     def save_score(self, game_score):
         # save the score in the db
-        print(game_score)
         self.cursor.execute(f"INSERT INTO scores VALUES ({game_score})")
         self.conn.commit()

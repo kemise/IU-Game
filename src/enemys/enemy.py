@@ -85,7 +85,6 @@ class Enemy:
         if len(shortest_path) > 1:
             # Nächsten Schritt aus dem kürzesten Weg auswählen
             next_tile_x, next_tile_y = shortest_path[1]
-            print(shortest_path[1])
 
             # Zielposition in Pixeln berechnen
             target_x = next_tile_x * TILE_SIZE
