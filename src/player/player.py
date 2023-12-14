@@ -1,6 +1,5 @@
 import pygame
 
-
 pygame.init()
 
 class Player:
@@ -25,12 +24,14 @@ class Player:
         self.is_walking = False
         if keys[pygame.K_UP] and self.pos_y > 0:
             self.pos_y -= self.speed
+            self.is_walking = True
         elif keys[pygame.K_RIGHT] and self.pos_x + self.width < display_width:
             self.pos_x += self.speed
             #set to true and thus enable the index to be censored
             self.is_walking = True
         elif keys[pygame.K_DOWN] and self.pos_y + self.height < display_height:
             self.pos_y += self.speed
+            self.is_walking = True
         elif keys[pygame.K_LEFT] and self.pos_x > 0:
             self.pos_x -= self.speed
             #set to true and thus enable the index to be censored
