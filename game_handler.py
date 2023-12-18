@@ -111,10 +111,10 @@ class Game:
         self.game_exit = False
     
     # GRID FOR TESTING
-    def draw_grid(self):
-        for line in range(0, 20):
-            pygame.draw.line(self.screen, (255, 255, 255), (0, line * self.tile_size), (self.display_width, line * self.tile_size))
-            pygame.draw.line(self.screen, (255, 255, 255), (line * self.tile_size, 0), (line * self.tile_size, self.display_height))
+    #def draw_grid(self):
+    #    for line in range(0, 20):
+    #        pygame.draw.line(self.screen, (255, 255, 255), (0, line * self.tile_size), (self.display_width, line * self.tile_size))
+    #        pygame.draw.line(self.screen, (255, 255, 255), (line * self.tile_size, 0), (line * self.tile_size, self.display_height))
 
     # display tile on screen
     def draw(self):
@@ -270,7 +270,7 @@ class Game:
         self.player.draw(self.screen)
         # placed the enemy into the window
         #self.enemy.draw(self.screen)
-        self.draw_grid()
+        #self.draw_grid()
         self.draw()
         for self.a in self.enemy_list:
             self.a.draw(self.screen)
