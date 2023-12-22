@@ -21,7 +21,7 @@ class Game:
         self.game_score:int
 
         #game sound
-
+        self.mute_sound = False
         self.game_over_sound = pygame.mixer.Sound("./assets/music/game_over.mp3")
         self.game_sound = pygame.mixer.Sound("./assets/music/game.mp3")
         self.menu_sound = pygame.mixer.Sound("./assets/music/main_screen.mp3")
@@ -280,8 +280,7 @@ class Game:
         pygame.display.update()
     
     # music controlling
-    def sound(self, sound_played, sound_menu_check, sound_game_over_check):
-            
+    def sound(self, sound_played, sound_menu_check, sound_game_over_check):   
 
             # games sound config
             # menu sound
@@ -296,12 +295,20 @@ class Game:
                 if not self.sound_played:
                     self.game_sound.play(-1)
                     self.sound_played = True
-                    return self.sound_played 
+                    return self.sound_played
 
     # function to end the game 
     def exit_game_function(self):
         pygame.quit()
         sys.exit()
+
+    # function to handle mute button
+    def sound_mute(self):
+        self.mute_sound = True
+
+    # function to handle no mute button
+    def sound_no_mute(self):
+        self.mute_sound = False
 
     # primary run function
     def run(self):
@@ -313,6 +320,8 @@ class Game:
         # set the game name
         pygame.display.set_caption("Sand")
         # objects for buttons
+        draw_mute_button= Button(x=(self.display_width // 2 +355),y=(self.display_height // 2 - 400), width=200, height=100, callback=self.sound_mute)
+        draw_no_mute_button= Button(x=(self.display_width // 2 +306),y=(self.display_height // 2 - 400), width=60, height=100, callback=self.sound_no_mute)
         start_button = Button(x=(self.display_width // 2 - 100),y=(self.display_height // 2 - 50), width=200, height=100, callback=self.create_world)
         exit_button = Button(x=(self.display_width // 2 - 100),y=(self.display_height // 2 - -80), width=200, height=100, callback=self.exit_game_function)
         headline = Button(x=(self.display_width // 8),y=(self.display_height // 8 * 1.1), width=200, height=100, callback=None)
@@ -343,6 +352,14 @@ class Game:
                 # check game started event
                 if not self.game_started:
                     start_button.handle_event(event)
+
+                # check game started event
+                if not self.game_started:
+                    draw_mute_button.handle_event(event)
+
+                # check game started event
+                if not self.game_started:
+                    draw_no_mute_button.handle_event(event)
                     
                 # check game exit event
                 if not self.game_exit:
@@ -361,8 +378,16 @@ class Game:
 
             keys = pygame.key.get_pressed()
 
-            # music 
-            self.sound(sound_game_over_check=self.sound_game_over_check, sound_menu_check=self.sound_menu_check, sound_played = self.sound_played )
+            # music
+            if self.mute_sound != True: 
+                self.menu_sound.set_volume(10)
+                self.game_sound.set_volume(10)
+                self.game_over_sound.set_volume(10)
+                self.sound(sound_game_over_check=self.sound_game_over_check, sound_menu_check=self.sound_menu_check, sound_played = self.sound_played )
+            else:
+                self.menu_sound.set_volume(0)
+                self.game_sound.set_volume(0)
+                self.game_over_sound.set_volume(0)
 
             # if var = true // player active
             if self.game_started:
@@ -373,9 +398,10 @@ class Game:
                 if self.check_collision():
                     # game over sound
                     # change game sound to game over sound
-                    self.game_sound.stop()
-                    self.game_over_sound.play(-1)
-                    self.sound_game_over_check = True
+                    if self.mute_sound != True: 
+                        self.game_sound.stop()
+                        self.game_over_sound.play(-1)
+                        self.sound_game_over_check = True
                     self.scoringHandler.save_score(game_score=self.game_score)
                     self.show_game_over()
                     self.reset_game()
@@ -389,6 +415,8 @@ class Game:
                 exit_button.draw_exit_button(self.screen)
                 headline.draw_headline(self.screen)
                 score.draw_score(self.screen)
+                draw_mute_button.draw_mute_button(self.screen)
+                draw_no_mute_button.draw_no_mute_button(self.screen)
                 # rendering the event text
                 # game_over_score_text
                 self.screen.blit(self.score_text, (self.display_width // 2 - self.score_text.get_width() // 2, self.display_height // 2 - self.score_text.get_height() // 2 - -310))
