@@ -9,3 +9,4 @@ __pycache__
 # database
 .db
 game.db
+src/UI/__pycache__/Buttons.cpython-311.pyc
