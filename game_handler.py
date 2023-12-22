@@ -368,7 +368,7 @@ class Game:
                 # check game enemy event
                 if event.type == new_enemy and self.game_started:
                     # create new enemies and append them to the list
-                    test = Enemy(random.randint(0, self.display_width - 40), random.randint(0, self.display_height - 40),
+                    test = Enemy(random.randint((self.player.pos_x + 80), self.display_width - 40), random.randint(self.player.pos_x + 80, self.display_height - 40),
                                  width=40, height=40, speed=2)
                     self.enemy_list.append(test)
             
